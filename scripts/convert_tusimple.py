@@ -129,7 +129,7 @@ def generate_segmentation_and_train_list(root, line_txt, names):
         #建立全零矩阵
         label = np.zeros((720,1280),dtype=np.uint8)
         #4个车道，56个水平线，xy坐标
-        all_points = np.zeros((4,56,2), dtype=np.float)
+        all_points = np.zeros((4,56,2), dtype=np.float64)
         #56个水平线位置
         the_anno_row_anchor = np.array([160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 260,
        270, 280, 290, 300, 310, 320, 330, 340, 350, 360, 370,
