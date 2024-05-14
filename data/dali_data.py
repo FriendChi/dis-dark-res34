@@ -36,7 +36,7 @@ class LaneExternalIterator(object):
             if dataset_name == 'CULane':
                 cache_path = os.path.join(path, 'culane_anno_cache.json')
             elif dataset_name == 'Tusimple':
-                cache_path = os.path.join(path, 'tusimple_anno_cache.json')
+                cache_path = os.path.join("/kaggle/working/", 'tusimple_anno_cache.json')
             elif dataset_name == 'CurveLanes':
                 cache_path = os.path.join(path, 'train', 'curvelanes_anno_cache.json')
             else:
