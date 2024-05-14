@@ -88,7 +88,7 @@ class LaneExternalIterator(object):
                 #读取文件内容并用np.frombuffer将其转换为np.uint8类型的数组
                 images.append(np.frombuffer(f.read(), dtype=np.uint8))
 
-            img_path = os.path.join(self.path, seg_name)
+            img_path = os.path.join("/kaggle/input/tusimple/TUSimple/train_set/seg_label", seg_name)
             with open(img_path, 'rb') as f:
                 seg_images.append(np.frombuffer(f.read(), dtype=np.uint8))
 
