@@ -235,21 +235,21 @@ def get_args():
     parser.add_argument('--root', required=True, help='The root of the Tusimple dataset')
     return parser
 
-root=r"G:\postgraduate_studyfile\Tusimple\train_set"
+#root=r"G:\postgraduate_studyfile\Tusimple\train_set"
 #root = '/mnt/studyfile/Tusimple/train_set'
 #产生了两个txt文件和一个json文件，多个png图片
 if __name__ == "__main__":
     #args = get_args().parse_args()
 
     # training set
-    names,line_txt = get_tusimple_list(root,  ['label_data_0601.json','label_data_0531.json','label_data_0313.json'])
+    names,line_txt = get_tusimple_list("/kaggle/input/tusimple/TUSimple/train_set",  ['label_data_0601.json','label_data_0531.json','label_data_0313.json'])
     # generate segmentation and training list for training
-    generate_segmentation_and_train_list(root, line_txt, names)
+    generate_segmentation_and_train_list("/kaggle/working/", line_txt, names)
 
     # testing set
-    names,line_txt = get_tusimple_list(root, ['test_tasks_0627.json'])
+    names,line_txt = get_tusimple_list("/kaggle/input/tusimple/TUSimple/test_set", ['test_tasks_0627.json'])
     # generate testing set for testing
-    with open(os.path.join(root,'test.txt'),'w') as fp:
+    with open(os.path.join("/kaggle/working/",'test.txt'),'w') as fp:
         for name in names:
             fp.write(name + '\n')
 
