@@ -1,5 +1,5 @@
 dataset= 'Tusimple'
-data_root= '/root/autodl-tmp/Tusimple/train_set' # Need to be modified before running
+data_root= '/kaggle/working/train_gt.txt' # Need to be modified before running
 epoch= 100
 batch_size= 1
 optimizer= 'SGD'
