@@ -946,7 +946,7 @@ def eval_lane(net, cfg, ep = None, logger = None):
         synchronize()  # wait for all results
         if is_main_process():
             combine_tusimple_test(cfg.test_work_dir,exp_name)
-            res = LaneEval.bench_one_submit(os.path.join(cfg.test_work_dir,exp_name + '.txt'),os.path.join(cfg.data_root,'test_label.json'))
+            res = LaneEval.bench_one_submit(os.path.join(cfg.test_work_dir,exp_name + '.txt'),os.path.join("/kaggle/input/tusimple/TUSimple",'test_label.json'))
             res = json.loads(res)
             for r in res:
                 dist_print(r['name'], r['value'])
