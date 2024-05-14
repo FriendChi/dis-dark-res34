@@ -136,7 +136,7 @@ class resnet1(nn.Module):
             # checkpoint = torch.hub.load_state_dict_from_url(url=url, map_location="cpu", model_dir="./model_data")
             # self.load_state_dict(checkpoint, strict=False)
             # print("Load weights from " + url.split('/')[-1])
-            pretrained_dict = torch.load('./model_data/yolov7_backbone_weights.pth')
+            pretrained_dict = torch.load('/kaggle/input/yolov7-backbone-weights/yolov7_backbone_weights.pth')
             # 获取当前模型的参数字典
             model_dict = self.state_dict()
             selected_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
