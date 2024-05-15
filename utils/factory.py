@@ -1,4 +1,4 @@
-from utils.loss import SoftmaxFocalLoss, ParsingRelationLoss, ParsingRelationDis, MeanLoss, TokenSegLoss, CustomKLDivLoss,VarLoss, EMDLoss, RegLoss
+from utils.loss import SoftmaxFocalLoss, ParsingRelationLoss, ParsingRelationDis, MeanLoss, TokenSegLoss, VarLoss, EMDLoss, RegLoss
 from utils.metrics import MultiLabelAcc, AccTopk, Metric_mIoU, Mae
 from utils.dist_utils import DistSummaryWriter
 
@@ -31,11 +31,10 @@ def get_scheduler(optimizer, cfg, iters_per_epoch):
     #返回创建好的调度器对象
     return scheduler
 
-
 def get_loss_dict(cfg):
     if cfg.dataset == 'CurveLanes':
         loss_dict = {
-            'name': ['cls_loss',                     'relation_loss',       'relation_dis',       'cls_loss_col',                    'cls_ext',                    'cls_ext_col',               'mean_loss_row', 'mean_loss_col','var_loss_row',     'var_loss_col',              'lane_token_seg_loss_row', 'lane_token_seg_loss_col'],
+            'name': ['cls_loss', 'relation_loss', 'relation_dis','cls_loss_col','cls_ext','cls_ext_col', 'mean_loss_row', 'mean_loss_col','var_loss_row', 'var_loss_col', 'lane_token_seg_loss_row', 'lane_token_seg_loss_col'],
             'op': [SoftmaxFocalLoss(2, ignore_lb=-1), ParsingRelationLoss(), ParsingRelationDis(), SoftmaxFocalLoss(2, ignore_lb=-1), torch.nn.CrossEntropyLoss(),  torch.nn.CrossEntropyLoss(), MeanLoss(), MeanLoss(), VarLoss(cfg.var_loss_power), VarLoss(cfg.var_loss_power), TokenSegLoss(), TokenSegLoss()],
             'weight': [1.0, cfg.sim_loss_w, cfg.shp_loss_w, 1.0, 1.0, 1.0, cfg.mean_loss_w, cfg.mean_loss_w, 0.01, 0.01, 1.0, 1.0],
             'data_src': [('cls_out', 'cls_label'), ('cls_out',), ('cls_out',), ('cls_out_col', 'cls_label_col'), 
@@ -44,14 +43,14 @@ def get_loss_dict(cfg):
         }
     elif cfg.dataset in ['Tusimple', 'CULane']:
         loss_dict = {
-            'name': ['cls_loss', 'relation_loss', 'relation_dis','cls_loss_col','cls_ext','cls_ext_col', 'mean_loss_row', 'mean_loss_col','distillation_col','distillation_row'],
-            #损失函数的实例化对象，分类损失函数不用换
-            'op': [SoftmaxFocalLoss(2, ignore_lb=-1), ParsingRelationLoss(), ParsingRelationDis(), SoftmaxFocalLoss(2, ignore_lb=-1), torch.nn.CrossEntropyLoss(),  torch.nn.CrossEntropyLoss(), MeanLoss(), MeanLoss(),CustomKLDivLoss(),CustomKLDivLoss()],
-            #损失函数的权重系数 res系列中sim_loss_w,shp_loss_w为0
-            'weight': [1.0, cfg.sim_loss_w, cfg.shp_loss_w, 1.0, 1.0, 1.0, cfg.mean_loss_w, cfg.mean_loss_w,0.01,0.01],
+            'name': ['cls_loss', 'relation_loss', 'relation_dis','cls_loss_col','cls_ext','cls_ext_col', 'mean_loss_row', 'mean_loss_col'],
+            #损失函数的实例化对象
+            'op': [SoftmaxFocalLoss(2, ignore_lb=-1), ParsingRelationLoss(), ParsingRelationDis(), SoftmaxFocalLoss(2, ignore_lb=-1), torch.nn.CrossEntropyLoss(),  torch.nn.CrossEntropyLoss(), MeanLoss(), MeanLoss(),],
+            #损失函数的权重系数
+            'weight': [1.0, cfg.sim_loss_w, cfg.shp_loss_w, 1.0, 1.0, 1.0, cfg.mean_loss_w, cfg.mean_loss_w,],
             #损失函数的输入数据源
             'data_src': [('cls_out', 'cls_label'), ('cls_out',), ('cls_out',), ('cls_out_col', 'cls_label_col'), 
-            ('cls_out_ext', 'cls_out_ext_label'), ('cls_out_col_ext', 'cls_out_col_ext_label') , ('cls_out', 'cls_label'),('cls_out_col', 'cls_label_col'),('cls_out_col', 'cls_out_col_teacher'),('cls_out', 'cls_out_teacher'),
+            ('cls_out_ext', 'cls_out_ext_label'), ('cls_out_col_ext', 'cls_out_col_ext_label') , ('cls_out', 'cls_label'),('cls_out_col', 'cls_label_col'),
             ],
         }
     else:

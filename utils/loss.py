@@ -88,18 +88,6 @@ class SoftmaxFocalLoss(nn.Module):
         # import pdb; pdb.set_trace()
         return loss
 
-class CustomKLDivLoss(nn.Module):
-    def __init__(self):
-        super(CustomKLDivLoss, self).__init__()
-
-    def forward(self, p, q):
-        log_p = F.log_softmax(p, dim=1)  # 对 p 进行对数转换
-        q = F.softmax(q, dim=1)  # 对 q 进行 softmax
-
-        kl_loss = F.kl_div(log_p, q, reduction='sum')  # 使用 PyTorch 自带的 KL 散度损失函数计算 KL 散度
-
-        return kl_loss.mean()
-    
 class ParsingRelationLoss(nn.Module):
     def __init__(self):
         super(ParsingRelationLoss, self).__init__()
