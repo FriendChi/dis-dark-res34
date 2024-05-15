@@ -4,7 +4,6 @@ from utils.dist_utils import get_rank, get_world_size, is_main_process, dist_pri
 from utils.config import Config
 import torch
 import time
-import json
 
 def str2bool(v):
     if isinstance(v, bool):
@@ -213,7 +212,7 @@ def get_train_loader(cfg):
     elif cfg.dataset == 'Tusimple':
 #get_world_size()用于获取分布式计算集群的大小。如果分布式计算环境不可用或者未初始化则返回1，表示没有分布式环境
 #get_rank()若不用分布式则返回0
-        train_loader = TrainCollect(cfg.batch_size, 4, "/kaggle/input/tusimple/TUSimple/train_set", os.path.join(cfg.data_root, 'train_gt.txt'), get_rank(), get_world_size(), 
+        train_loader = TrainCollect(cfg.batch_size, 4, cfg.data_root, os.path.join(cfg.data_root, 'train_gt.txt'), get_rank(), get_world_size(), 
                                 cfg.row_anchor, cfg.col_anchor, cfg.train_width, cfg.train_height, cfg.num_cell_row, cfg.num_cell_col, cfg.dataset, cfg.crop_ratio)
     elif cfg.dataset == 'CurveLanes':
         train_loader = TrainCollect(cfg.batch_size, 4, cfg.data_root, os.path.join(cfg.data_root, 'train', 'train_gt.txt'), get_rank(), get_world_size(), 
@@ -222,78 +221,25 @@ def get_train_loader(cfg):
         raise NotImplementedError
     return train_loader 
 
-def inference(net, teacher_net,data_label, dataset):
+def inference(net, data_label, dataset):
     if dataset == 'CurveLanes':
         return inference_curvelanes(net, data_label)
     elif dataset in ['Tusimple', 'CULane']:
-        return inference_culane_tusimple(net,teacher_net, data_label)
+        return inference_culane_tusimple(net, data_label)
     else:
         raise NotImplementedError
 
-n=0
-def write_json(name,data):
-    global n
-    n+=1
-    if n>14:
-        print('结束写入')
-        return 
-    # 指定JSON文件路径
-    file_path = str(n)+'data.json'
-
-    # 读取JSON文件中的数据
-    try:
-        with open(file_path, 'r') as file:
-            existing_data = json.load(file)
-    except FileNotFoundError:
-        existing_data = {}
-
-    # 新数据
-    new_data = {
-        'name': name,
-        'data': data.tolist()
-    }
-
-    # 合并数据
-    existing_data.update(new_data)
-
-    # 将合并后的数据写入JSON文件
-    with open(file_path, 'a') as file:
-        json.dump(existing_data, file, indent=4)
-
-    print(name,"新数据已成功添加到 JSON 文件中。")
-
-def inference_culane_tusimple(net,teacher_net, data_label):
+def inference_culane_tusimple(net, data_label):
     #得到模型输出结果
     pred = net(data_label['images'])
-    teacher_pred = teacher_net(data_label['images'])
-
-    # #获取行方向的标签数据，判断它们是否不等于-1
+    #获取行方向的标签数据，判断它们是否不等于-1
     cls_out_ext_label = (data_label['labels_row'] != -1).long()
     #获取列方向的标签数据，判断它们是否不等于-1
     cls_out_col_ext_label = (data_label['labels_col'] != -1).long()
-    
-    # write_json("pred['loc_row']",pred['loc_row'])
-    # write_json("data_label['labels_row']",data_label['labels_row'])
-    # write_json("pred['loc_col']",pred['loc_col'])
-    # write_json("data_label['labels_col']",data_label['labels_col'])
-    # write_json("pred['exist_row']",pred['exist_row'])
-    # write_json("cls_out_ext_label",cls_out_ext_label)
-    # write_json("pred['exist_col']",pred['exist_col'])
-    # write_json("cls_out_col_ext_label",cls_out_col_ext_label)
-    # write_json("data_label['labels_row_float']",data_label['labels_row_float'])
-    # write_json("data_label['labels_col_float']",data_label['labels_col_float'])
-    # write_json("pred['loc_row']",teacher_pred['loc_row'])
-    # write_json("pred['loc_col']",teacher_pred['loc_col'])
-    # write_json("pred['exist_row']",teacher_pred['exist_row'])
-    # write_json("pred['exist_col']",teacher_pred['exist_col'])
-    
-
     #将模型输出结果和数据标签字典中的一些数据赋值给它的不同键
-    #4个模型输出，6个标签，其中4个标签有对应输出
     res_dict = {'cls_out': pred['loc_row'], 'cls_label': data_label['labels_row'], 'cls_out_col':pred['loc_col'],'cls_label_col':data_label['labels_col'],
             'cls_out_ext':pred['exist_row'], 'cls_out_ext_label':cls_out_ext_label, 'cls_out_col_ext':pred['exist_col'],
-                'cls_out_col_ext_label':cls_out_col_ext_label, 'labels_row_float':data_label['labels_row_float'], 'labels_col_float':data_label['labels_col_float'], 
-                'cls_out_col_teacher': teacher_pred['loc_col'],'cls_out_teacher': teacher_pred['loc_row']}
+                'cls_out_col_ext_label':cls_out_col_ext_label, 'labels_row_float':data_label['labels_row_float'], 'labels_col_float':data_label['labels_col_float'] }
     if 'seg_out' in pred.keys():
         res_dict['seg_out'] = pred['seg_out']
         res_dict['seg_label'] = data_label['seg_images']
@@ -312,19 +258,6 @@ def inference_curvelanes(net, data_label):
         res_dict['seg_label'] = data_label['segs']
     return res_dict
 
-
-
-
-
-
-'''
-res_dict 
-{'cls_out': pred['loc_row'], 'cls_label': data_label['labels_row'], 'cls_out_col':pred['loc_col'],
- 'cls_label_col':data_label['labels_col'],'cls_out_ext':pred['exist_row'], 'cls_out_ext_label':cls_out_ext_label,
- 'cls_out_col_ext':pred['exist_col'],'cls_out_col_ext_label':cls_out_col_ext_label,
-'labels_row_float':data_label['labels_row_float'], 'labels_col_float':data_label['labels_col_float'] 
-    ,'seg_out': pred['seg_out'],'seg_label':data_label['seg_images']}
-'''
 def calc_loss(loss_dict, results, logger, global_step, epoch):
     loss = 0
 
@@ -336,20 +269,11 @@ def calc_loss(loss_dict, results, logger, global_step, epoch):
             
         data_src = loss_dict['data_src'][i]
 
-        #训练得到的数据结果
         datas = [results[src] for src in data_src]
         #调用当前损失函数的实例化对象，传入提取的数据作为参数，计算当前损失值
-        #data_src：('seg_out_row', 'seg_label'), ('seg_out_col', 'seg_label')
-        #datas：[results[seg_out_row],results[seg_label]]
         loss_cur = loss_dict['op'][i](*datas)
-
         #判断全局步数是否能被20整除，如果是就用日志对象记录当前损失函数的名称，当前损失值和全局步数
         if global_step % 20 == 0:
-            # print([src for src in data_src])
-            # print([results[src].shape for src in data_src])
-            # print(loss_dict['op'][i].__class__.__name__)
-            # print(loss_cur)
-            # print('---------------')
             logger.add_scalar('loss/'+loss_dict['name'][i], loss_cur, global_step)
         #将当前损失值乘以权重系数，并累加到总的损失值上，并返回
         loss += loss_cur * loss_dict['weight'][i]
