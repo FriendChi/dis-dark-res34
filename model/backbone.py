@@ -97,7 +97,7 @@ class Transition_Block(nn.Module):
         return torch.cat([x_2, x_1], 1)
 
 class resnet1(nn.Module):
-    def __init__(self, layers,pretrained = False,transition_channels= {'l' : 32, 'x' : 40}['l'], block_channels=32, n= {'l' : 4, 'x' : 6}['l'], phi='l'):
+    def __init__(self, layers,pretrained = False,transition_channels= 16, block_channels=16, n= {'l' : 4, 'x' : 6}['l'], phi='l'):
         super().__init__()
         #-----------------------------------------------#
         #   输入图片是640, 640, 3
@@ -119,14 +119,14 @@ class resnet1(nn.Module):
             Transition_Block(transition_channels * 8, transition_channels * 4),
             Multi_Concat_Block(transition_channels * 8, block_channels * 4, transition_channels * 16, n=n, ids=ids),
         )
-        # self.dark4 = nn.Sequential(
-        #     Transition_Block(transition_channels * 16, transition_channels * 8),
-        #     Multi_Concat_Block(transition_channels * 16, block_channels * 8, transition_channels * 32, n=n, ids=ids),
-        # )
-        # self.dark5 = nn.Sequential(
-        #     Transition_Block(transition_channels * 32, transition_channels * 16),
-        #     Multi_Concat_Block(transition_channels * 32, block_channels * 8, transition_channels * 32, n=n, ids=ids),
-        # )
+        self.dark4 = nn.Sequential(
+            Transition_Block(transition_channels * 16, transition_channels * 8),
+            Multi_Concat_Block(transition_channels * 16, block_channels * 8, transition_channels * 32, n=n, ids=ids),
+        )
+        self.dark5 = nn.Sequential(
+            Transition_Block(transition_channels * 32, transition_channels * 16),
+            Multi_Concat_Block(transition_channels * 32, block_channels * 8, transition_channels * 32, n=n, ids=ids),
+        )
         
         if pretrained:
             url = {
@@ -151,18 +151,18 @@ class resnet1(nn.Module):
         #   dark3的输出为80, 80, 512，是一个有效特征层
         #-----------------------------------------------#
         x = self.dark3(x)
-        feat1 = x
+        #feat1 = x
         #-----------------------------------------------#
         #   dark4的输出为40, 40, 1024，是一个有效特征层
         #-----------------------------------------------#
-        #x = self.dark4(x)
+        x = self.dark4(x)
         #feat2 = x
         #-----------------------------------------------#
         #   dark5的输出为20, 20, 1024，是一个有效特征层
         #-----------------------------------------------#
-        #x = self.dark5(x)
-        #feat3 = x
-        return None,None,feat1  #, feat2, feat3
+        x = self.dark5(x)
+        feat3 = x
+        return None,None,feat3  #, feat2, feat3
 
 
 class resnet(torch.nn.Module):

@@ -1,5 +1,5 @@
 import torch
-from model.backbone import resnet
+from model.backbone import resnet1
 import numpy as np
 from utils.common import initialize_weights
 from model.seg_model import SegHead
@@ -30,7 +30,7 @@ class parsingNet(torch.nn.Module):
         
         self.input_dim = (self.input_height//32) * (self.input_width//32) * 9
 
-        self.model = resnet(backbone, pretrained=pretrained)
+        self.model = resnet1(backbone, pretrained=pretrained)
 
         self.cls_distribute = torch.nn.Sequential(
             torch.nn.Conv2d(512, 128, 3, padding=1),
